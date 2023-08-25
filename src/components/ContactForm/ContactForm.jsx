@@ -3,17 +3,29 @@ import { Formik } from 'formik';
 import { Container, Button } from './ContactForm.styled';
 import { useDispatch } from 'react-redux';
 import { addContact } from 'redux/operations';
+import { useSelector } from 'react-redux';
+import { selectContacts } from 'redux/selectors';
 
 export default function ContactForm() {
   let dispatch = useDispatch();
+  const items = useSelector(selectContacts);
 
-  const addNewContact = ({ name, phone }) => {
+  const addNewContact = ({ name, phone }, setSubmitting, resetForm) => {
     const newContact = {
       id: nanoid(),
       name,
       phone,
     };
-    dispatch(addContact(newContact));
+    if (items.map(item => item.name.toLowerCase().includes(
+      newContact.name.toLowerCase()
+    )).some(name => name === true))
+     {
+      alert(`${newContact.name} is already in contacts`);
+    } else {
+      dispatch(addContact(newContact));
+      setSubmitting(true);
+      resetForm()
+    }
   };
 
   return (
@@ -42,9 +54,7 @@ export default function ContactForm() {
         return errors;
       }}
       onSubmit={(values, { setSubmitting, resetForm }) => {
-        addNewContact(values);
-        setSubmitting(true);
-        resetForm();
+        addNewContact(values, setSubmitting, resetForm );
       }}
     >
       {({
@@ -54,7 +64,6 @@ export default function ContactForm() {
         handleChange,
         handleBlur,
         handleSubmit,
-        isSubmitting,
       }) => (
         <form onSubmit={handleSubmit}>
           <Container>
@@ -85,7 +94,7 @@ export default function ContactForm() {
             {errors.phone && touched.phone && errors.phone}
           </Container>
 
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" >
             Add contact
           </Button>
         </form>
